@@ -120,15 +120,17 @@ class BookingSerializer(serializers.ModelSerializer):
             price = price or self.instance.price
             address = address or self.instance.address
 
+        # Check for existing booking for the same user, service, date, and time
         if service and booking_date and booking_time:
             existing_booking = Booking.objects.filter(
+                user=self.context['request'].user,
                 service=service,
                 booking_date=booking_date,
                 booking_time=booking_time
             ).exclude(id=self.instance.id if self.instance else None)
             if existing_booking.exists():
                 raise serializers.ValidationError(
-                    f"A booking for this service on {booking_date} at {booking_time} already exists."
+                    f"You already have a booking for this service on {booking_date} at {booking_time}. Please choose a different time or date."
                 )
 
         if work_specifications and service:
