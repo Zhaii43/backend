@@ -23,10 +23,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include("users.urls"), name='users'),
     path('api/user/', include('users.urls')), 
-    path('api/', include('services.urls')),
-    path('api/', include('contact.urls')),
+    path('api/', include('services.urls')), # Include user-related APIs
+    path('api/', include('contact.urls')),  # Include contact app URLs
+
 ]
 
-# Serve media files in both development and production
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serving media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
