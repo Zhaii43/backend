@@ -60,8 +60,8 @@ class Booking(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'service', 'booking_date', 'booking_time'],
-                name='unique_booking_per_user_service_datetime'
+                fields=['service', 'booking_date', 'booking_time'],
+                name='unique_booking_per_service_datetime'
             )
         ]
 
@@ -92,7 +92,7 @@ class Review(models.Model):
 class Reply(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='replies')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='replies')
-    comment = models.TextField(blank=True, help_text="Reply tonid the review")
+    comment = models.TextField(blank=True, help_text="Reply to the review")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
