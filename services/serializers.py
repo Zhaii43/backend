@@ -7,9 +7,17 @@ class WorkSpecificationSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'price']
 
 class ServiceImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ServiceImage
         fields = ['id', 'image']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image and hasattr(obj.image, 'url'):
+            return request.build_absolute_uri(obj.image.url)
+        return None
 
 class ReplySerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)

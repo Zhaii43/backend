@@ -112,6 +112,11 @@ class ServiceImageListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = ServiceSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
 class ServiceImageDestroyAPIView(generics.DestroyAPIView):
     queryset = ServiceImage.objects.all()
     serializer_class = ServiceImageSerializer
