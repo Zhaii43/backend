@@ -4,6 +4,7 @@ from .models import Service, ServiceImage, Booking, WorkSpecification, Review, R
 class ServiceImageInline(admin.TabularInline):
     model = ServiceImage
     extra = 1
+    fields = ('image',)  # Updated to show URL field
 
 class WorkSpecificationInline(admin.TabularInline):
     model = WorkSpecification

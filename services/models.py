@@ -28,7 +28,7 @@ class Service(models.Model):
 
 class ServiceImage(models.Model):
     service = models.ForeignKey(Service, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='service_images/')
+    image = models.URLField(max_length=200, help_text="URL to the service image")
 
     def __str__(self):
         return f"Image for {self.service.title}"
