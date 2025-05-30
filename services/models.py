@@ -60,8 +60,8 @@ class Booking(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'service', 'booking_date', 'booking_time'],
-                name='unique_booking_per_user_service_datetime'
+                fields=['service', 'booking_date', 'booking_time'],
+                name='unique_booking_per_service_datetime'
             )
         ]
 
