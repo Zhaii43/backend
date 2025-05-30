@@ -16,6 +16,11 @@ class Service(models.Model):
         ('painting', 'Painting'),
         ('plumbing', 'Plumbing'),
         ('electric', 'Electric'),
+        ('landscaping', 'Landscaping'),
+        ('pest_control', 'Pest Control'),
+        ('handyman', 'Handyman'),
+        ('carpentry', 'Carpentry'),
+        ('moving', 'Moving'),
     ]
 
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='cleaning')
