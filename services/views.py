@@ -99,11 +99,6 @@ class ServiceListCreateAPIView(generics.ListCreateAPIView):
             return self.queryset.filter(category=category).prefetch_related('reviews__replies')
         return self.queryset.prefetch_related('reviews__replies')
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
-
 class ServiceRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
@@ -112,20 +107,10 @@ class ServiceRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
     def get_queryset(self):
         return super().get_queryset().prefetch_related('images', 'reviews__replies')
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
-
 class ServiceImageListCreateAPIView(generics.ListCreateAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
 
 class ServiceImageDestroyAPIView(generics.DestroyAPIView):
     queryset = ServiceImage.objects.all()
