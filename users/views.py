@@ -81,7 +81,7 @@ class PasswordResetRequestView(APIView):
             
             token = str(uuid.uuid4())
             
-            reset_link = f"https://your-frontend-domain.com/reset-password?token={token}&email={email}"
+            reset_link = f"https://home-service-uk6z.vercel.app/reset-password?token={token}&email={email}"
             
             try:
                 send_mail(
