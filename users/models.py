@@ -1,17 +1,15 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
-# Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
         if not email:
             raise ValueError("Email is required")
         if not username:
             raise ValueError("Username is required")
-        
         email = self.normalize_email(email)
         user = self.model(email=email, username=username, **extra_fields)
-        user.set_password(password)  # Hashes the password
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -20,7 +18,6 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, username, password, **extra_fields)
 
-# Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [
         ("Male", "Male"),
@@ -29,15 +26,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ]
 
     first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50, blank=True, null=True)  # Optional
+    middle_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     contact = models.CharField(max_length=15, unique=True)
     address = models.TextField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)  # Stored as a hashed password
-
+    password = models.CharField(max_length=255)
+    password_reset_token = models.CharField(max_length=36, blank=True, null=True)
+    password_reset_expiry = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

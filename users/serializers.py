@@ -15,19 +15,12 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        # Check for username uniqueness
         if CustomUser.objects.filter(username=data["username"]).exists():
             raise serializers.ValidationError({"username": "This username is already taken."})
-
-        # Check for email uniqueness
         if CustomUser.objects.filter(email=data["email"]).exists():
             raise serializers.ValidationError({"email": "This email is already in use."})
-
-        # Check if passwords match
         if data["password"] != data["confirm_password"]:
             raise serializers.ValidationError({"password": "Passwords do not match!"})
-
-        # Custom password validation
         password = data["password"]
         if len(password) < 8:
             raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
@@ -35,7 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Password must contain at least one uppercase letter."})
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
             raise serializers.ValidationError({"password": "Password must contain at least one special character."})
-
         return data
 
     def create(self, validated_data):
@@ -57,17 +49,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        # Validate email uniqueness
         email = data.get("email")
         user = self.context['request'].user
         if email and CustomUser.objects.filter(email=email).exclude(id=user.id).exists():
             raise serializers.ValidationError({"email": "This email is already in use."})
-
-        # Validate password fields if any are provided
         current_password = data.get("current_password")
         password = data.get("password")
         confirm_password = data.get("confirm_password")
-
         if password or confirm_password or current_password:
             if not current_password:
                 raise serializers.ValidationError({"current_password": "Current password is required to update password."})
@@ -79,8 +67,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"password": "New password is required."})
             if not confirm_password:
                 raise serializers.ValidationError({"confirm_password": "Confirm password is required."})
-
-            # Custom password validation for update
             if password:
                 if len(password) < 8:
                     raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
@@ -88,11 +74,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"password": "Password must contain at least one uppercase letter."})
                 if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
                     raise serializers.ValidationError({"password": "Password must contain at least one special character."})
-
         return data
 
     def update(self, instance, validated_data):
-        # Update non-password fields
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.middle_name = validated_data.get("middle_name", instance.middle_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
@@ -100,10 +84,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         instance.address = validated_data.get("address", instance.address)
         instance.gender = validated_data.get("gender", instance.gender)
         instance.email = validated_data.get("email", instance.email)
-
-        # Update password if provided
         if validated_data.get("password"):
             instance.set_password(validated_data["password"])
-
         instance.save()
         return instance
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True, validators=[validate_password])
