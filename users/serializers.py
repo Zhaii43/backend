@@ -107,33 +107,3 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
-
-class PasswordResetSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-
-    def validate_email(self, value):
-        try:
-            CustomUser.objects.get(email=value)
-        except CustomUser.DoesNotExist:
-            raise serializers.ValidationError("No account found with this email address.")
-        return value
-
-class PasswordResetConfirmSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True)
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    confirm_password = serializers.CharField(write_only=True, required=True)
-
-    def validate(self, data):
-        if data["password"] != data["confirm_password"]:
-            raise serializers.ValidationError({"password": "Passwords do not match!"})
-        
-        # Custom password validation
-        password = data["password"]
-        if len(password) < 8:
-            raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
-        if not re.search(r"[A-Z]", password):
-            raise serializers.ValidationError({"password": "Password must contain at least one uppercase letter."})
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-            raise serializers.ValidationError({"password": "Password must contain at least one special character."})
-
-        return data
