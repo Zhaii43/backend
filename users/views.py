@@ -5,8 +5,9 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from .models import CustomUser
-from .serializers import UserSerializer, UserUpdateSerializer
+from .models import CustomUser, PasswordResetToken
+from .serializers import UserSerializer, UserUpdateSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from django.urls import reverse
 
 class UserRegisterView(APIView):
     def post(self, request):
@@ -75,3 +76,31 @@ def get_user_details(request):
     user = request.user
     serializer = UserSerializer(user)
     return Response(serializer.data)
+
+class PasswordResetRequestView(APIView):
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            user = CustomUser.objects.get(email=email)
+            reset_token = PasswordResetToken.objects.create(user=user)
+            # In production, send an email with the reset link
+            reset_link = f"{request.scheme}://{request.get_host()}{reverse('password_reset_confirm')}?token={reset_token.token}"
+            # For development, return the link in the response
+            return Response(
+                {"message": "Password reset link generated.", "reset_link": reset_link},
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if serializer.is_valid():
+            reset_token = PasswordResetToken.objects.get(token=serializer.validated_data["token"])
+            user = reset_token.user
+            user.set_password(serializer.validated_data["new_password"])
+            user.save()
+            reset_token.delete()  # Delete the token after use
+            return Response({"message": "Password reset successful!"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
