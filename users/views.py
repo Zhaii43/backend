@@ -60,7 +60,7 @@ class UserLogoutView(APIView):
             token.blacklist()
 
             return Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
-        except Exception:
+        except Exception as e:
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserUpdateView(APIView):
@@ -79,19 +79,22 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
-            user = CustomUser.objects.get(email=email)
-            
-            # Generate a unique token
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                return Response({"error": "No user is associated with this email address."}, status=status.HTTP_400_BAD_REQUEST)
+
             token = str(uuid.uuid4())
             
-            # Create password reset token with 1-hour expiration
-            PasswordResetToken.objects.create(
-                user=user,
-                token=token,
-                expires_at=timezone.now() + timedelta(hours=1)
-            )
-            
-            # Construct reset link
+            try:
+                PasswordResetToken.objects.create(
+                    user=user,
+                    token=token,
+                    expires_at=timezone.now() + timedelta(hours=1)
+                )
+            except Exception as e:
+                return Response({"error": "Failed to generate reset token."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             reset_link = f"https://home-service-uk6z.vercel.app/reset-password?token={token}&email={email}"
             
             try:
@@ -104,7 +107,7 @@ class PasswordResetRequestView(APIView):
                 )
                 return Response({"message": "Password reset link sent to your email."}, status=status.HTTP_200_OK)
             except Exception as e:
-                return Response({"error": "Failed to send email. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetConfirmView(APIView):
@@ -117,23 +120,23 @@ class PasswordResetConfirmView(APIView):
 
             try:
                 user = CustomUser.objects.get(email=email)
-                reset_token = PasswordResetToken.objects.get(user=user, token=token)
-                
-                if not reset_token.is_valid():
-                    return Response({"error": "This reset token is expired."}, status=status.HTTP_400_BAD_REQUEST)
-                
-                # Update user password
-                user.set_password(password)
-                user.save()
-                
-                # Delete the used token
-                reset_token.delete()
-                
-                return Response({"message": "Password reset successfully. You can now log in with your new password."}, status=status.HTTP_200_OK)
             except CustomUser.DoesNotExist:
                 return Response({"error": "Invalid email."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                reset_token = PasswordResetToken.objects.get(user=user, token=token)
+                if not reset_token.is_valid():
+                    return Response({"error": "This reset token is expired."}, status=status.HTTP_400_BAD_REQUEST)
             except PasswordResetToken.DoesNotExist:
-                return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Invalid reset token."}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                user.set_password(password)
+                user.save()
+                reset_token.delete()
+                return Response({"message": "Password reset successfully. You can now log in with your new password."}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": f"Failed to update password: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])

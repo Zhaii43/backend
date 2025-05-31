@@ -110,13 +110,11 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         password = data.get("password")
         confirm_password = data.get("confirm_password")
 
-        # Validate email exists
         try:
             user = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
             raise serializers.ValidationError({"email": "No user is associated with this email address."})
 
-        # Validate token
         try:
             reset_token = PasswordResetToken.objects.get(user=user, token=token)
             if not reset_token.is_valid():
@@ -124,11 +122,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         except PasswordResetToken.DoesNotExist:
             raise serializers.ValidationError({"token": "Invalid reset token."})
 
-        # Validate passwords match
         if password != confirm_password:
             raise serializers.ValidationError({"password": "Passwords do not match."})
 
-        # Custom password validation
         if len(password) < 8:
             raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
         if not re.search(r"[A-Z]", password):
