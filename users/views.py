@@ -90,7 +90,7 @@ class PasswordResetView(APIView):
             user.reset_password_expiry = datetime.now() + timedelta(hours=1)
             user.save()
 
-            reset_link = f"https://your-frontend-domain.com/reset-password?token={user.reset_password_token}"
+            reset_link = f"https://home-service-uk6z.vercel.app/reset-password?token={user.reset_password_token}"
             send_mail(
                 subject="Password Reset Request",
                 message=f"Click the link to reset your password: {reset_link}\nThis link will expire in 1 hour.",
