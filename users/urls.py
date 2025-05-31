@@ -4,8 +4,6 @@ from .views import (
     UserLoginView,
     UserLogoutView,
     UserUpdateView,
-    PasswordResetRequestView,
-    PasswordResetConfirmView,
     get_user_details,
 )
 
@@ -14,7 +12,5 @@ urlpatterns = [
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
     path("update/", UserUpdateView.as_view(), name="update"),
-    path("password_reset/", PasswordResetRequestView.as_view(), name="password_reset"),
-    path("password_reset_confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path("me/", get_user_details, name="user-details"),
 ]

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
-from django.utils import timezone
 
+# Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
         if not email:
@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
         
         email = self.normalize_email(email)
         user = self.model(email=email, username=username, **extra_fields)
-        user.set_password(password)
+        user.set_password(password)  # Hashes the password
         user.save(using=self._db)
         return user
 
@@ -20,6 +20,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         return self.create_user(email, username, password, **extra_fields)
 
+# Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [
         ("Male", "Male"),
@@ -28,14 +29,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ]
 
     first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50, blank=True, null=True)
+    middle_name = models.CharField(max_length=50, blank=True, null=True)  # Optional
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     contact = models.CharField(max_length=15, unique=True)
     address = models.TextField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)  # Stored as a hashed password
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -47,15 +48,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-
-class PasswordResetToken(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    token = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-
-    def is_valid(self):
-        return timezone.now() <= self.expires_at
-
-    def __str__(self):
-        return f"Token for {self.user.email}"
