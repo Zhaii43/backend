@@ -82,7 +82,7 @@ class PasswordResetView(APIView):
                 user.save()
                 
                 # Send email
-                reset_link = f"https://your-frontend-domain.com/reset-password?token={token}"
+                reset_link = f"https://home-service-uk6z.vercel.app/reset-password?token={token}"
                 send_mail(
                     'Password Reset Request',
                     f'Click the link to reset your password: {reset_link}\nThis link will expire in 1 hour.',

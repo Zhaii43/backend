@@ -9,7 +9,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Username is required")
         email = self.normalize_email(email)
         user = self.model(email=email, username=username, **extra_fields)
-        user.set_password(password)
+        user.set_password(password)  # Hashes the password
         user.save(using=self._db)
         return user
 
@@ -33,7 +33,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     address = models.TextField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)
     password_reset_token = models.CharField(max_length=36, blank=True, null=True)
     password_reset_expiry = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
