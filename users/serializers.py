@@ -1,7 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, PasswordResetToken
 import re
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -96,3 +97,43 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if not CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("No user is associated with this email address.")
         return value
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get("email")
+        token = data.get("token")
+        password = data.get("password")
+        confirm_password = data.get("confirm_password")
+
+        # Validate email exists
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"email": "No user is associated with this email address."})
+
+        # Validate token
+        try:
+            reset_token = PasswordResetToken.objects.get(user=user, token=token)
+            if not reset_token.is_valid():
+                raise serializers.ValidationError({"token": "This reset token is expired."})
+        except PasswordResetToken.DoesNotExist:
+            raise serializers.ValidationError({"token": "Invalid reset token."})
+
+        # Validate passwords match
+        if password != confirm_password:
+            raise serializers.ValidationError({"password": "Passwords do not match."})
+
+        # Custom password validation
+        if len(password) < 8:
+            raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
+        if not re.search(r"[A-Z]", password):
+            raise serializers.ValidationError({"password": "Password must contain at least one uppercase letter."})
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+            raise serializers.ValidationError({"password": "Password must contain at least one special character."})
+
+        return data
